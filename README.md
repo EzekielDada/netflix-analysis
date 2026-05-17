@@ -1,133 +1,108 @@
 # Netflix Data Analysis
 
 ## Overview
-This project analyzes Netflix's dataset of shows and movies to derive insights on genres, ratings, content types, and trends. The analysis includes data preparation, cleaning, exploration, statistical analysis, and visualizations using Python and R.
+This project analyzes a Netflix dataset of movies and TV shows. The analysis covers data preparation, cleaning, exploration, visualization, and statistical summaries using Python and R.
 
-## Project Structure
+## Project Files
 ```
-├── netflix_analysis.py        # Main Python analysis script
-├── netflix_analysis.R         # R visualization script
-├── netflix_data.csv           # Netflix dataset
-├── netflix_visualizations.png # Python-generated visualizations
-├── netflix_genres_r.png       # R-generated genre visualization
-└── README.md                  # This file
+├── Netflix_Analysis.zip           # Original zipped dataset
+├── netflix_analysis.py            # Main Python script
+├── netflix_analysis.R             # R visualization script
+├── Netflix_shows_movies.csv       # Extracted and renamed dataset (generated on first run)
+├── netflix_visualizations.png     # Output charts from Python
+├── netflix_genres_r.png           # Genre chart from R
+└── README.md
 ```
 
-## Dataset Description
-The Netflix dataset contains the following columns:
-- `show_id`: Unique identifier for each title
-- `type`: Movie or TV Show
-- `title`: Name of the title
-- `director`: Director(s) of the title
-- `cast`: Main cast members
-- `country`: Country/countries of origin
-- `date_added`: Date added to Netflix
-- `release_year`: Year the title was released
-- `rating`: Content rating (TV-MA, PG-13, etc.)
-- `duration`: Length of content
-- `listed_in`: Genres/categories
-- `description`: Brief description
+## Dataset Columns
+| Column | Description |
+|---|---|
+| show_id | Unique title ID |
+| type | Movie or TV Show |
+| title | Title name |
+| director | Director(s) |
+| cast | Main cast |
+| country | Country of origin |
+| date_added | Date added to Netflix |
+| release_year | Release year |
+| rating | Content rating (e.g. TV-MA, PG-13) |
+| duration | Runtime or number of seasons |
+| listed_in | Genres |
+| description | Short description |
+
+---
 
 ## Requirements
 
-### Python Requirements
-- pandas
-- numpy
-- matplotlib
-- seaborn
+### Python
+- Python 3.x
+- pandas, numpy, matplotlib, seaborn
 
-Install using:
 ```bash
 pip install pandas numpy matplotlib seaborn
 ```
 
-### R Requirements
+### R
+- R 4.x
 - tidyverse
-- ggplot2
-- stringr
 
-Install using:
 ```R
-install.packages(c("tidyverse", "ggplot2", "stringr"))
+install.packages("tidyverse")
 ```
+
+---
 
 ## How to Run
 
-### Python Analysis
-Navigate to the project directory and run:
+### Python
 ```bash
 python netflix_analysis.py
 ```
 
-**Output:**
-- Console output with data exploration, statistics, and analysis
-- `netflix_visualizations.png` containing 4 visualizations:
-  1. Top 15 Genres
-  2. Content Rating Distribution
-  3. Movie vs TV Show Distribution
-  4. Content Added Over Years
+The script will:
+1. Unzip `Netflix_Analysis.zip` and rename the CSV to `Netflix_shows_movies.csv`
+2. Clean missing values
+3. Print data exploration and statistical summaries to the console
+4. Save `netflix_visualizations.png` with four charts:
+   - Most Watched Genres (Seaborn)
+   - Ratings Distribution (Matplotlib)
+   - Movies vs TV Shows pie chart (Pyplot)
+   - Content Added Per Year (Seaborn)
 
-### R Visualization
-Run in R or RStudio:
+### R
+Run in R or RStudio (after the Python script has created `Netflix_shows_movies.csv`):
 ```R
-source('netflix_analysis.R')
+source("netflix_analysis.R")
 ```
 
-**Output:**
-- `netflix_genres_r.png` - Top 15 Genres visualization
+Saves `netflix_genres_r.png` — a ggplot2 bar chart of the top 15 genres.
 
-## Analysis Summary
+---
 
-### Data Cleaning
-- Handled missing values by replacing with 'Unknown' or 'Not Rated'
-- Preserved data integrity throughout the cleaning process
+## Steps Performed
 
-### Key Findings
-- Dataset includes both Movies and TV Shows
-- Contains titles from multiple countries and years
-- Diverse range of ratings and genres
-- Growth in content addition over time
+### 1. Data Preparation
+Used Python's `zipfile` module to extract the dataset from `Netflix_Analysis.zip` and renamed the file to `Netflix_shows_movies.csv`.
 
-### Visualizations
-1. **Top Genres**: Bar chart showing the 15 most common genres
-2. **Rating Distribution**: Distribution of content across different ratings
-3. **Content Type**: Pie chart comparing Movies vs TV Shows
-4. **Timeline**: Trend of content added to Netflix over years
+### 2. Data Cleaning
+Filled missing values in `director`, `cast`, `country`, `date_added`, and `rating` columns with `'Unknown'` or `'Not Rated'`.
 
-### Statistical Metrics
-- Average and median release year
-- Most common rating
-- Number of unique countries and genres
-- Top 10 countries by content volume
+### 3. Data Exploration
+- Checked column types and shapes
+- Ran `describe()` for descriptive statistics
+- Reviewed content type and rating distributions
 
-## File Descriptions
+### 4. Data Visualization (Python)
+- **Most Watched Genres** — horizontal bar chart using Seaborn
+- **Ratings Distribution** — bar chart using Matplotlib
+- **Movies vs TV Shows** — pie chart using Pyplot
+- **Content Added Per Year** — line chart using Seaborn
 
-### netflix_analysis.py
-Comprehensive Python script that performs:
-- Data loading and copying
-- Missing value handling
-- Data exploration with descriptive statistics
-- Multiple visualizations using Matplotlib and Seaborn
-- Statistical analysis
+### 5. R Integration
+Reproduced the genre chart in R using ggplot2 (tidyverse).
 
-### netflix_analysis.R
-R script that performs:
-- Data loading
-- Genre parsing and counting
-- ggplot2 visualization of top genres
-- Professional formatted output
-
-## Results Interpretation
-
-**Genre Analysis**: Indicates which genres are most represented on Netflix, useful for content strategy and user recommendations.
-
-**Rating Distribution**: Shows which content ratings dominate the platform, reflecting the audience demographics Netflix targets.
-
-**Content Type Split**: Displays the proportion of Movies vs TV Shows, showing Netflix's content mix.
-
-**Timeline Analysis**: Reveals how Netflix's content library has grown and evolved over time.
-
-## Notes
-- Some entries have missing values in director, cast, or country fields; these are handled appropriately
-- Genres are parsed from the comma-separated `listed_in` column
-- Analysis is based on the dataset snapshot provided
+### 6. Statistical Analysis
+- Average, median, and mode of release year
+- Most common content rating
+- Unique country and genre counts
+- Top 10 countries by number of titles

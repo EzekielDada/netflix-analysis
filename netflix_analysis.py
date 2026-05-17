@@ -1,3 +1,5 @@
+import zipfile
+import os
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -5,129 +7,137 @@ import seaborn as sns
 import warnings
 warnings.filterwarnings('ignore')
 
-# Data Preparation
-df = pd.read_csv('netflix_data.csv')
-netflix_shows_movies = df.copy()
 
-print("=" * 60)
-print("NETFLIX DATA ANALYSIS")
-print("=" * 60)
+# -------------------------------------------------------
+# STEP 1: DATA PREPARATION
+# -------------------------------------------------------
 
-# Data Cleaning
-print("\n1. DATA CLEANING")
-print("-" * 60)
+# Unzip the dataset and rename it to Netflix_shows_movies
+with zipfile.ZipFile('Netflix_Analysis.zip', 'r') as z:
+    z.extract('netflix_data.csv', '.')
 
-# Check for missing values
-missing_values = netflix_shows_movies.isnull().sum()
-print(f"\nMissing Values:\n{missing_values[missing_values > 0]}")
+if os.path.exists('Netflix_shows_movies.csv'):
+    os.remove('Netflix_shows_movies.csv')
+os.rename('netflix_data.csv', 'Netflix_shows_movies.csv')
 
-# Fill missing values
-netflix_shows_movies['director'].fillna('Unknown', inplace=True)
-netflix_shows_movies['cast'].fillna('Unknown', inplace=True)
-netflix_shows_movies['country'].fillna('Unknown', inplace=True)
-netflix_shows_movies['date_added'].fillna('Unknown', inplace=True)
-netflix_shows_movies['rating'].fillna('Not Rated', inplace=True)
+netflix_shows_movies = pd.read_csv('Netflix_shows_movies.csv')
 
-print("\nMissing values addressed.")
+print("Dataset loaded: Netflix_shows_movies.csv")
+print(f"Rows: {netflix_shows_movies.shape[0]}, Columns: {netflix_shows_movies.shape[1]}\n")
 
-# Data Exploration
-print("\n2. DATA EXPLORATION")
-print("-" * 60)
 
-print(f"\nDataset Shape: {netflix_shows_movies.shape}")
-print(f"\nColumn Names and Types:\n{netflix_shows_movies.dtypes}")
+# -------------------------------------------------------
+# STEP 2: DATA CLEANING
+# -------------------------------------------------------
 
-# Basic statistics
-print(f"\nBasic Statistics:\n{netflix_shows_movies.describe()}")
+print("Missing values before cleaning:")
+print(netflix_shows_movies.isnull().sum()[netflix_shows_movies.isnull().sum() > 0])
 
-# Content type distribution
-print(f"\nContent Type Distribution:\n{netflix_shows_movies['type'].value_counts()}")
+netflix_shows_movies['director'] = netflix_shows_movies['director'].fillna('Unknown')
+netflix_shows_movies['cast'] = netflix_shows_movies['cast'].fillna('Unknown')
+netflix_shows_movies['country'] = netflix_shows_movies['country'].fillna('Unknown')
+netflix_shows_movies['date_added'] = netflix_shows_movies['date_added'].fillna('Unknown')
+netflix_shows_movies['rating'] = netflix_shows_movies['rating'].fillna('Not Rated')
 
-# Rating distribution
-print(f"\nRating Distribution:\n{netflix_shows_movies['rating'].value_counts()}")
+print("\nMissing values after cleaning:")
+print(netflix_shows_movies.isnull().sum()[netflix_shows_movies.isnull().sum() > 0])
+print("No remaining missing values.\n")
 
-# Release year statistics
-print(f"\nRelease Year Statistics:\n{netflix_shows_movies['release_year'].describe()}")
 
-# Data Visualization
-print("\n3. DATA VISUALIZATION")
-print("-" * 60)
+# -------------------------------------------------------
+# STEP 3: DATA EXPLORATION
+# -------------------------------------------------------
+
+print("=== Dataset Overview ===")
+print(netflix_shows_movies.dtypes)
+
+print("\n=== Descriptive Statistics ===")
+print(netflix_shows_movies.describe(include='all'))
+
+print("\n=== Content Type Counts ===")
+print(netflix_shows_movies['type'].value_counts())
+
+print("\n=== Top 10 Ratings ===")
+print(netflix_shows_movies['rating'].value_counts().head(10))
+
+print("\n=== Release Year Summary ===")
+print(netflix_shows_movies['release_year'].describe())
+
+
+# -------------------------------------------------------
+# STEP 4: DATA VISUALIZATION
+# -------------------------------------------------------
 
 sns.set_style("whitegrid")
 
-# Figure 1: Most Watched Genres
 fig, axes = plt.subplots(2, 2, figsize=(14, 10))
+fig.suptitle("Netflix Data Analysis", fontsize=15, fontweight='bold', y=1.01)
 
-# Parse genres from listed_in column
+# --- Chart 1: Most Watched Genres (Seaborn) ---
 genres_list = []
-for genres in netflix_shows_movies['listed_in']:
-    if pd.notna(genres):
-        genre_split = [g.strip() for g in str(genres).split(',')]
-        genres_list.extend(genre_split)
+for entry in netflix_shows_movies['listed_in']:
+    genres_list.extend([g.strip() for g in str(entry).split(',')])
 
-genre_counts = pd.Series(genres_list).value_counts().head(15)
+genre_counts = pd.Series(genres_list).value_counts().head(15).reset_index()
+genre_counts.columns = ['genre', 'count']
 
-ax1 = axes[0, 0]
-genre_counts.plot(kind='barh', ax=ax1, color='#E50914')
-ax1.set_xlabel('Count')
-ax1.set_title('Top 15 Genres on Netflix', fontsize=12, fontweight='bold')
-ax1.invert_yaxis()
+sns.barplot(data=genre_counts, y='genre', x='count', ax=axes[0, 0], palette='Reds_r')
+axes[0, 0].set_title('Most Watched Genres', fontweight='bold')
+axes[0, 0].set_xlabel('Number of Titles')
+axes[0, 0].set_ylabel('')
 
-# Figure 2: Ratings Distribution
-ax2 = axes[0, 1]
+# --- Chart 2: Ratings Distribution (Matplotlib) ---
 rating_counts = netflix_shows_movies['rating'].value_counts()
-ax2.bar(range(len(rating_counts)), rating_counts.values, color='#221F1F')
-ax2.set_xticks(range(len(rating_counts)))
-ax2.set_xticklabels(rating_counts.index, rotation=45, ha='right')
-ax2.set_ylabel('Count')
-ax2.set_title('Content Rating Distribution', fontsize=12, fontweight='bold')
+axes[0, 1].bar(rating_counts.index, rating_counts.values, color='#E50914', edgecolor='black')
+axes[0, 1].set_title('Ratings Distribution', fontweight='bold')
+axes[0, 1].set_xlabel('Rating')
+axes[0, 1].set_ylabel('Count')
+axes[0, 1].tick_params(axis='x', rotation=45)
 
-# Figure 3: Content Type Distribution
-ax3 = axes[1, 0]
+# --- Chart 3: Movies vs TV Shows (Pyplot pie) ---
 type_counts = netflix_shows_movies['type'].value_counts()
-colors = ['#E50914', '#221F1F']
-ax3.pie(type_counts.values, labels=type_counts.index, autopct='%1.1f%%', 
-        colors=colors, startangle=90)
-ax3.set_title('Movie vs TV Show Distribution', fontsize=12, fontweight='bold')
+axes[1, 0].pie(type_counts.values, labels=type_counts.index,
+               autopct='%1.1f%%', colors=['#E50914', '#221F1F'], startangle=90)
+axes[1, 0].set_title('Movies vs TV Shows', fontweight='bold')
 
-# Figure 4: Content Added Over Time
-ax4 = axes[1, 1]
-date_added_clean = netflix_shows_movies[netflix_shows_movies['date_added'] != 'Unknown']['date_added'].str.extract(r'(\d{4})')[0]
-date_added_clean = pd.to_numeric(date_added_clean, errors='coerce').dropna().astype(int)
-year_counts = date_added_clean.value_counts().sort_index()
-ax4.plot(year_counts.index, year_counts.values, marker='o', color='#E50914', linewidth=2)
-ax4.set_xlabel('Year')
-ax4.set_ylabel('Content Added')
-ax4.set_title('Netflix Content Added Over Years', fontsize=12, fontweight='bold')
-ax4.grid(True, alpha=0.3)
+# --- Chart 4: Content Added Per Year (Seaborn line) ---
+year_added = (
+    netflix_shows_movies[netflix_shows_movies['date_added'] != 'Unknown']['date_added']
+    .str.extract(r'(\d{4})')[0]
+    .dropna()
+    .astype(int)
+)
+year_df = year_added.value_counts().sort_index().reset_index()
+year_df.columns = ['year', 'count']
+
+sns.lineplot(data=year_df, x='year', y='count', ax=axes[1, 1],
+             color='#E50914', marker='o', linewidth=2)
+axes[1, 1].set_title('Content Added Per Year', fontweight='bold')
+axes[1, 1].set_xlabel('Year')
+axes[1, 1].set_ylabel('Titles Added')
 
 plt.tight_layout()
 plt.savefig('netflix_visualizations.png', dpi=300, bbox_inches='tight')
-print("\nVisualizations saved as 'netflix_visualizations.png'")
+print("Visualizations saved to netflix_visualizations.png")
 plt.show()
 
-# Statistical Analysis
-print("\n4. STATISTICAL ANALYSIS")
-print("-" * 60)
 
-print(f"\nAverage Release Year: {netflix_shows_movies['release_year'].mean():.2f}")
-print(f"Median Release Year: {netflix_shows_movies['release_year'].median():.0f}")
-print(f"Most Common Release Year: {netflix_shows_movies['release_year'].mode()[0]}")
+# -------------------------------------------------------
+# STEP 5: STATISTICAL ANALYSIS
+# -------------------------------------------------------
 
-print(f"\nMost Common Rating: {netflix_shows_movies['rating'].mode()[0]}")
-print(f"Number of Unique Countries: {netflix_shows_movies['country'].nunique()}")
-print(f"Number of Unique Genres: {len(genres_list)}")
+print("\n=== Statistical Analysis ===")
+print(f"Average release year     : {netflix_shows_movies['release_year'].mean():.1f}")
+print(f"Median release year      : {netflix_shows_movies['release_year'].median():.0f}")
+print(f"Most common release year : {netflix_shows_movies['release_year'].mode()[0]}")
+print(f"Most common rating       : {netflix_shows_movies['rating'].mode()[0]}")
+print(f"Unique countries         : {netflix_shows_movies['country'].nunique()}")
+print(f"Total unique genres      : {pd.Series(genres_list).nunique()}")
 
-# Top countries by content
 countries_list = []
-for country in netflix_shows_movies['country']:
-    if pd.notna(country) and country != 'Unknown':
-        country_split = [c.strip() for c in str(country).split(',')]
-        countries_list.extend(country_split)
+for entry in netflix_shows_movies['country']:
+    if entry != 'Unknown':
+        countries_list.extend([c.strip() for c in str(entry).split(',')])
 
-country_counts = pd.Series(countries_list).value_counts().head(10)
-print(f"\nTop 10 Countries by Content:\n{country_counts}")
-
-print("\n" + "=" * 60)
-print("Analysis Complete")
-print("=" * 60)
+print("\nTop 10 Countries by Content:")
+print(pd.Series(countries_list).value_counts().head(10))
